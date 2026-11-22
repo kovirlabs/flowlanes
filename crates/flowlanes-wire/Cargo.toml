@@ -1,0 +1,10 @@
+[package]
+name = "flowlanes-wire"
+description = "NetFlow v5, NetFlow v9 (RFC 3954) and IPFIX (RFC 7011) decoding, template store and loss counters. No I/O."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
