@@ -57,7 +57,7 @@ status file and stop that task.
 - **Look up current docs** before using any crate API, the RFCs, the IANA
   registry, UniFi settings, Wazuh syntax or Docker images. Do not write
   them from memory.
-- **Licence compatibility.** This repo is Apache-2.0 (TBD). Every new
+- **Licence compatibility.** This repo is Apache-2.0 (decided). Every new
   dependency must be MIT, Apache-2.0, BSD, ISC, Zlib or MPL-2.0. No GPL or
   LGPL dependencies. No Wazuh content is copied in; the Wazuh pack is
   written here.
@@ -100,12 +100,15 @@ cargo run -p flowlanes -- generate --help      # generated export packets for te
 
 - First build machine: the Ryzen 7 5700X desktop (Windows 11, Docker
   Desktop). Tail latency figures from Windows are provisional.
-- Flow source: Evan's UniFi gateway, which exports IPFIX. Pointing it at
+- Flow source: Evan's UniFi gateway, which will export IPFIX to this PC on
+  UDP 2055 (decided 2026-11-22; 2055 is the collector's default port).
+  Flow data from his network is never committed and is used only to
+  measure false-alert rates (R8). Pointing the gateway at
   this machine is Evan's action; agents do not change network equipment.
 
 ## Open decisions (TBD)
 
-- Name, licence and GitHub owner
+- GitHub owner (decided 2026-11-22: the name `flowlanes` is final, the
+  licence is Apache-2.0, the gateway exports IPFIX to this PC on UDP 2055)
 - Whether status and run files move to `paralanes` like the other repos'
-- The UDP port and the machine the gateway exports to
 - Whether enrichment may use an offline GeoIP or ASN database, and which
