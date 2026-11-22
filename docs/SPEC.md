@@ -39,8 +39,8 @@ Elastic, Security Onion, Zabbix or `rulelanes` can read it too.
 | # | Requirement | How it is tested |
 | --- | --- | --- |
 | R1 | Decoding is correct | Golden vectors per protocol version, built from the RFCs; property tests that encode generated records and decode them back; the same packets decoded by an existing open collector give the same field values |
-| R2 | Templates are handled as the RFCs say | Templates are kept per exporter address, observation domain (or source ID) and template ID; a template can be replaced or withdrawn; data that arrives before its template is held up to a limit, then counted as rejected; options templates are decoded |
-| R3 | No silent loss | Per-exporter sequence gaps, malformed packets, records without a template and socket receive drops are counted and exposed. Records in equals records out plus counted rejects |
+| R2 | Templates are handled as the RFCs say | Templates are kept per exporter address, observation domain (or source ID) and template ID; a template can be replaced or withdrawn (correction, M1: RFC 7011 §8.4 says UDP collectors MUST ignore withdrawals, so they are counted and ignored by default and applied only when configured); data that arrives before its template is held up to a limit, then counted as rejected; options templates are decoded |
+| R3 | No silent loss | Per-exporter sequence gaps, malformed packets, records without a template and socket receive drops are counted and exposed. Records in equals records out plus counted rejects. Without its template the number of records in a data set is unknown, so the decode-side identity is kept per data set (sets in = decoded + rejected + malformed + held) and per record for v5 (M1) |
 | R4 | Unknown fields are kept | An information element the decoder does not know, including enterprise elements, passes through as its ID and raw bytes |
 | R5 | Throughput and latency are measured | Generated load at rising rates; records per second and p99 from receipt to output, in a run file |
 | R6 | Wazuh raises alerts from it | With the pack installed in the Wazuh container, `wazuh-logtest` decodes every event type and the expected rule fires; one end-to-end run shows a detector alert in Wazuh's `alerts.json` |
@@ -91,7 +91,7 @@ UDP ──► receive ──► decode ──► enrich ──► aggregate ─�
 
 | Crate | Holds |
 | --- | --- |
-| `flowlanes-wire` | Packet and record decoding for v5, v9 and IPFIX; the element registry; template store. `no_std` where practical; no I/O |
+| `flowlanes-wire` | Packet and record decoding for v5, v9 and IPFIX; the element registry; template store. `no_std` where practical (M1: uses `std` collections; no I/O) |
 | `flowlanes-gen` | Generated export packets: valid traffic, attack scenarios, malformed packets. Used by tests and load runs |
 | `flowlanes-detect` | Windows, baselines and detectors. Pure functions over records; no I/O |
 | `flowlanes-pipe` | The staged collector on `stagelanes` |
