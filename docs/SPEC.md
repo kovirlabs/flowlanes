@@ -1,6 +1,8 @@
 # flowlanes specification
 
-Date: 2026-11-22. Status: DRAFT. Items marked TBD are open decisions for
+Date: 2026-11-22. Status: DRAFT. Name (`flowlanes`), licence (Apache-2.0)
+and the flow source (UniFi IPFIX to this PC on UDP 2055) are decided.
+Items marked TBD are open decisions for
 Evan. Items marked "verify in M0" are from memory or one web search and
 must be checked against current documentation before code depends on them.
 
@@ -51,16 +53,21 @@ Elastic, Security Onion, Zabbix or `rulelanes` can read it too.
 
 | Protocol | Reference | Milestone |
 | --- | --- | --- |
-| IPFIX (version 10) | RFC 7011, IANA IPFIX Information Elements | M1; the UniFi gateway's default (verify in M0) |
+| IPFIX (version 10) | RFC 7011, IANA IPFIX Information Elements | M1; what Evan's gateway will send (decided). That IPFIX is UniFi's *default* was not confirmed in M0 (`docs/unifi.md`) |
 | NetFlow v9 | RFC 3954 | M1 |
 | NetFlow v5 | Cisco's fixed format | M1 |
 | sFlow v5 | sflow.org | M6 |
 
-Transport is UDP first. IPFIX over TCP and SCTP is not planned.
+Transport is UDP first, default port 2055 (decided). IPFIX over TCP and
+SCTP is not planned.
 
 M0 records exactly what the UniFi gateway exports: version, template
 fields, enterprise elements, active and inactive timeouts, sampling, and
-whether the switches export at all or only the gateway (verify in M0).
+whether the switches export at all or only the gateway. M0 result
+(`docs/unifi.md`, from documentation only): v10, v9 and v5 are offered;
+sampling is off by default; the active timeout is 5 minutes; templates are
+re-sent every 20 packets; UniFi switches do not export flows; the template
+field list and any enterprise elements are not publicly documented.
 
 ## 5. Architecture
 
@@ -117,8 +124,10 @@ one of them; and encrypted DNS hides the tunnel signal.
 
 - The collector writes JSON lines to a file. The Wazuh manager (or an
   agent) reads the file through log collection with the JSON format
-  (verify in M0: the `localfile` settings and how a file on the Windows
-  host reaches the manager container).
+  (checked in M0: `<localfile>` with `<log_format>json</log_format>` reads
+  single-line JSON files and `location` takes wildcards; how the file on the
+  Windows host reaches the manager container, bind mount or host agent, is
+  decided in M3; see `docs/landscape.md`).
 - The pack holds a rule for each alert kind, with levels, groups and MITRE
   ATT&CK IDs where one applies, and low-level rules for `flow` events.
 - R6 is checked with `wazuh-logtest`, the same oracle `rulelanes` uses.
