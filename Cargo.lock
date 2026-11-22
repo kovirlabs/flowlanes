@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
+name = "flowlanes-gen"
+version = "0.1.0"
+dependencies = [
+ "flowlanes-wire",
+]
+
+[[package]]
 name = "flowlanes-wire"
 version = "0.1.0"
