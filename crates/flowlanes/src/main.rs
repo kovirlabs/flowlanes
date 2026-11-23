@@ -117,6 +117,7 @@ pub fn counters_json(c: &Counters) -> J {
         "templates_added": c.templates_added,
         "templates_replaced": c.templates_replaced,
         "templates_malformed": c.templates_malformed,
+        "templates_expired": c.templates_expired,
         "withdrawals_applied": c.withdrawals_applied,
         "withdrawals_ignored": c.withdrawals_ignored,
         "data_sets": c.data_sets,
@@ -156,6 +157,8 @@ fn decode(args: &[String]) -> ExitCode {
     };
     let config = Config {
         honor_withdrawals: args.iter().any(|a| a == "--honor-withdrawals"),
+        // A packet file has no receive times, so templates cannot age.
+        template_timeout_secs: 0,
         ..Config::default()
     };
     let mut c = Collector::new(config);
