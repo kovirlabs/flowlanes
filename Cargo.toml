@@ -4,6 +4,7 @@ members = [
     "crates/flowlanes-wire",
     "crates/flowlanes-gen",
     "crates/flowlanes-pipe",
+    "crates/flowlanes-bench",
     "crates/flowlanes",
 ]
 

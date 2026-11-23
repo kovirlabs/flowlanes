@@ -95,6 +95,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "flowlanes-bench"
+version = "0.1.0"
+dependencies = [
+ "flowlanes-gen",
+ "flowlanes-pipe",
+ "flowlanes-wire",
+ "serde_json",
+ "stagelanes-arch",
+]
+
+[[package]]
 name = "flowlanes-gen"
 version = "0.1.0"
 dependencies = [
