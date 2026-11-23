@@ -1,6 +1,11 @@
 [workspace]
 resolver = "3"
-members = ["crates/flowlanes-wire", "crates/flowlanes-gen", "crates/flowlanes"]
+members = [
+    "crates/flowlanes-wire",
+    "crates/flowlanes-gen",
+    "crates/flowlanes-pipe",
+    "crates/flowlanes",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -12,6 +17,15 @@ rust-version = "1.85"
 [workspace.dependencies]
 flowlanes-wire = { path = "crates/flowlanes-wire" }
 flowlanes-gen = { path = "crates/flowlanes-gen" }
+flowlanes-pipe = { path = "crates/flowlanes-pipe" }
+# Sibling checkout, Apache-2.0. Path dependencies until Evan says otherwise.
+stagelanes-arch = { path = "../stagelanes/crates/stagelanes-arch" }
+stagelanes-mem = { path = "../stagelanes/crates/stagelanes-mem" }
+stagelanes-pipe = { path = "../stagelanes/crates/stagelanes-pipe" }
+# MIT OR Apache-2.0.
+socket2 = "0.6.5"
+# MIT OR Apache-2.0.
+ctrlc = "3.5.3"
 # MIT OR Apache-2.0.
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
 
