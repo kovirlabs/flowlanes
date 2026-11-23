@@ -1,6 +1,6 @@
 [package]
 name = "flowlanes"
-description = "flowlanes command line: decode and generate."
+description = "flowlanes command line: decode, generate and collect."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,6 +9,8 @@ publish.workspace = true
 [dependencies]
 flowlanes-wire.workspace = true
 flowlanes-gen.workspace = true
+flowlanes-pipe.workspace = true
+ctrlc.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
