@@ -619,7 +619,6 @@ impl<S: Sink> Pipeline<S> {
         };
 
         let encode = {
-            let shared = shared.clone();
             spawn_stage(spec("encode", cpus[2]), move |ctx| {
                 let mut free: Vec<Vec<u8>> =
                     (0..64).map(|_| Vec::with_capacity(32 * 1024)).collect();
@@ -630,20 +629,12 @@ impl<S: Sink> Pipeline<S> {
                         buf_rx.recv_with(LINK, |b| free.push(b));
                         let mut buf = free.pop().unwrap_or_default();
                         buf.clear();
-                        let mut records = 0u32;
                         for r in &d.records {
-                            let before = buf.len();
-                            if serde_json::to_writer(&mut buf, &json::record_json(r)).is_ok() {
-                                buf.push(b'\n');
-                                records += 1;
-                            } else {
-                                buf.truncate(before);
-                                shared.records_failed.fetch_add(1, Relaxed);
-                            }
+                            json::write_record(&mut buf, r);
                         }
                         line_tx.send(Lines {
                             received: d.received,
-                            records,
+                            records: d.records.len() as u32,
                             sequence: d.records.first().map_or(0, |r| r.sequence),
                             buf,
                         });
