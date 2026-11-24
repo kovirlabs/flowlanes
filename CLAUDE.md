@@ -27,7 +27,12 @@ status file and stop that task.
 
 ## Hard rules
 
-- **Agents never merge, tag, publish or push.** There is no remote yet.
+- **Agents push their own branches and open pull requests without asking.**
+  The remote is `kovirlabs/flowlanes`. Never push to `main`.
+- **Agents merge a pull request only when Evan asks for that merge.** They
+  never tag or publish.
+- **Run files carry no local paths.** A recorded command names the program,
+  not the directory it ran from, so no user name reaches the repo.
 - **One milestone per session unless Evan says otherwise.** Stop at the
   gate.
 - **Decoding follows the RFCs and is cross-checked.** NetFlow v9 is RFC
