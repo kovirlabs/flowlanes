@@ -4,7 +4,7 @@
 //! documentation ranges and MAC addresses are locally administered.
 
 use flowlanes_gen::unifi::*;
-use flowlanes_gen::*;
+use flowlanes_gen::{exporter, ipfix_message, ipfix_options_template, ipfix_template, set};
 use flowlanes_wire::{Collector, Config, FieldSpec, Value, ie};
 use std::net::Ipv4Addr;
 
@@ -277,4 +277,71 @@ fn template_changes_are_reported_once_per_layout() {
     let got = c.take_template_changes();
     assert_eq!(got.len(), 1);
     assert!(got[0].changed);
+}
+
+/// Sampling off: three flow templates split by protocol, the interface
+/// table on 257 and the export counters on 261. Everything decodes, every
+/// element is named, and the sequence numbers show no gap.
+#[test]
+fn gateway_shaped_export_without_sampling_decodes_fully() {
+    let mut c = Collector::default();
+    let mut out = Vec::new();
+    for (i, p) in traffic(5, 40, 20).iter().enumerate() {
+        out.extend(c.decode(p.exporter, &p.bytes, i as u64));
+    }
+    let k = &c.counters;
+    assert!(k.sets_balance());
+    assert_eq!(k.data_sets_malformed + k.data_sets_rejected_no_template, 0);
+    assert_eq!(k.sequence_missing + k.sequence_out_of_order, 0);
+    assert_eq!(k.options_records_out, 4);
+    assert!(k.records_out > 100);
+    for r in &out {
+        for fld in &r.fields {
+            assert!(fld.name.is_some(), "element {} unnamed", fld.id);
+        }
+    }
+    for t in [258, 259, 260] {
+        assert!(out.iter().any(|r| r.template_id == Some(t)), "template {t}");
+    }
+    let icmp = out.iter().find(|r| r.template_id == Some(260)).unwrap();
+    assert_eq!(icmp.get(4), Some(&u(1)));
+    assert!(icmp.get(32).is_some());
+    assert!(out.iter().all(|r| r.options || r.get(302).is_none()));
+}
+
+/// When sampling is switched off the gateway starts a new export: the
+/// sequence numbers start again and template IDs 257 to 261 come back with
+/// other layouts. Each new layout replaces the old one, is reported as a
+/// change, and the data after it decodes with the new layout.
+#[test]
+fn switching_sampling_off_reuses_template_ids_cleanly() {
+    let mut c = Collector::new(Config {
+        report_templates: true,
+        ..Config::default()
+    });
+    let e = exporter(1);
+    for (i, p) in traffic_sampled(3, 5, 10).iter().enumerate() {
+        c.decode(e, &p.bytes, i as u64);
+    }
+    let before = c.take_template_changes().len();
+    assert_eq!(before, 6);
+    let mut out = Vec::new();
+    for (i, p) in traffic(4, 5, 10).iter().enumerate() {
+        out.extend(c.decode(e, &p.bytes, 100 + i as u64));
+    }
+    let changes = c.take_template_changes();
+    // 256 is unchanged; 257 to 261 change layout.
+    assert_eq!(changes.len(), 5);
+    assert!(changes.iter().all(|t| t.changed));
+    let k = &c.counters;
+    assert_eq!(
+        k.sequence_out_of_order, 1,
+        "the new export starts again at 0"
+    );
+    assert_eq!(k.data_sets_malformed, 0);
+    assert!(k.sets_balance());
+    assert!(out.iter().all(|r| r.template_id != Some(258) || !r.options));
+    // Sampled data for a reused ID arriving after the switch but before
+    // the new template would be read with the old layout: the decoder has
+    // no way to tell. The gateway was seen sending the new templates first.
 }

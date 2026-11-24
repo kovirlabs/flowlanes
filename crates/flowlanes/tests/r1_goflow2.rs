@@ -149,7 +149,8 @@ fn r1_cross_check_with_goflow2() {
         packets.extend(flowlanes_gen::traffic(v, seed, 12, 15).0);
     }
     // IPFIX in the layout a UniFi gateway sends (docs/unifi.md).
-    packets.extend(flowlanes_gen::unifi::traffic(104, 12, 15));
+    packets.extend(flowlanes_gen::unifi::traffic_sampled(104, 12, 15));
+    packets.extend(flowlanes_gen::unifi::traffic(105, 12, 15));
     let mut c = Collector::default();
     let mut expect: Vec<Key> = Vec::new();
     for p in &packets {
