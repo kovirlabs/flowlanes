@@ -263,6 +263,41 @@ fn r2_template_replaced() {
     assert_eq!(r[0].get(12), Some(&vb[1]));
 }
 
+#[test]
+fn r2_template_times_out_unless_refreshed() {
+    let mut c = Collector::new(Config {
+        template_timeout_secs: 100,
+        ..Config::default()
+    });
+    let e = exp();
+    let t = ipfix_message(1, 0, BASE_SECS, &[tmpl(256, &fields_a())]);
+    let va = [ip4(192, 0, 2, 9), Value::Unsigned(1)];
+    let d = |seq| ipfix_message(1, seq, BASE_SECS, &[data(256, &fields_a(), &va)]);
+    c.decode(e, &t, 0);
+    // Refreshed at 90 s, so still alive at 180 s.
+    c.decode(e, &t, 90);
+    assert_eq!(c.decode(e, &d(0), 180).len(), 1);
+    assert_eq!(c.counters.templates_expired, 0);
+    // Not refreshed since 90 s: gone at 191 s. The data is held, not
+    // decoded with a stale template, and not lost silently.
+    assert!(c.decode(e, &d(1), 191).is_empty());
+    assert_eq!(c.counters.templates_expired, 1);
+    assert_eq!(c.counters.held_now(), 1);
+    assert!(c.counters.sets_balance());
+    // The next copy of the template releases it.
+    assert_eq!(c.decode(e, &t, 192).len(), 1);
+    assert!(c.counters.sets_balance());
+
+    // 0 keeps templates for ever.
+    let mut c = Collector::new(Config {
+        template_timeout_secs: 0,
+        ..Config::default()
+    });
+    c.decode(e, &t, 0);
+    assert_eq!(c.decode(e, &d(0), 1_000_000).len(), 1);
+    assert_eq!(c.counters.templates_expired, 0);
+}
+
 fn withdrawal(id: u16) -> Vec<u8> {
     let mut b = id.to_be_bytes().to_vec();
     b.extend_from_slice(&[0, 0]);

@@ -153,6 +153,9 @@ pub struct Counters {
     pub templates_added: u64,
     pub templates_replaced: u64,
     pub templates_malformed: u64,
+    /// Templates discarded because they were not refreshed within
+    /// [`Config::template_timeout_secs`].
+    pub templates_expired: u64,
     pub withdrawals_applied: u64,
     pub withdrawals_ignored: u64,
     pub data_sets: u64,
@@ -203,6 +206,12 @@ pub struct Config {
     /// Apply IPFIX template withdrawals. RFC 7011 §8.4 says UDP collectors
     /// MUST ignore them, so the default is `false` (they are counted).
     pub honor_withdrawals: bool,
+    /// Seconds a template lives without being re-sent; 0 keeps templates
+    /// for ever. RFC 3954 §9 has unrefreshed templates expire, and RFC 7011
+    /// §8.4 lets a UDP collector give each template a lifetime, which
+    /// "SHOULD default to at least 3 times the observed retransmission
+    /// rate". Neither gives a number; the default here is a placeholder.
+    pub template_timeout_secs: u64,
 }
 
 impl Default for Config {
@@ -211,6 +220,7 @@ impl Default for Config {
             hold_max_sets: 256,
             hold_max_age_secs: 60,
             honor_withdrawals: false,
+            template_timeout_secs: 1800,
         }
     }
 }
@@ -228,6 +238,10 @@ pub struct Collector {
     pub config: Config,
     pub counters: Counters,
     templates: HashMap<TemplateKey, Template>,
+    /// When each template was last received (`now` of that packet).
+    refreshed: HashMap<TemplateKey, u64>,
+    /// `now` of the packet being decoded.
+    now: u64,
     held: VecDeque<Held>,
     /// Next expected sequence number per (exporter, version, domain).
     next_seq: HashMap<(IpAddr, Version, u32), u32>,
@@ -292,6 +306,8 @@ impl Collector {
             config,
             counters: Counters::default(),
             templates: HashMap::new(),
+            refreshed: HashMap::new(),
+            now: 0,
             held: VecDeque::new(),
             next_seq: HashMap::new(),
             released: Vec::new(),
@@ -310,6 +326,7 @@ impl Collector {
     /// any monotonic clock; used only to age held data).
     pub fn decode(&mut self, exporter: IpAddr, packet: &[u8], now: u64) -> Vec<Record> {
         self.counters.packets += 1;
+        self.now = now;
         self.expire_held(now);
         let mut out = Vec::new();
         if packet.len() < 2 {
@@ -659,6 +676,8 @@ impl Collector {
                         && t.options == options
                         && (all || k.template_id == id))
                 });
+                let templates = &self.templates;
+                self.refreshed.retain(|k, _| templates.contains_key(k));
                 continue;
             }
             if body.len() - at < hdr {
@@ -726,6 +745,7 @@ impl Collector {
             self.counters.templates_malformed += 1;
             return;
         }
+        self.refreshed.insert(key, self.now);
         match self.templates.insert(key, t) {
             Some(_) => self.counters.templates_replaced += 1,
             None => self.counters.templates_added += 1,
@@ -760,6 +780,17 @@ impl Collector {
         out: &mut Vec<Record>,
     ) -> bool {
         self.counters.data_sets += 1;
+        let timeout = self.config.template_timeout_secs;
+        if timeout != 0
+            && let Some(&at) = self.refreshed.get(&key)
+            && now.saturating_sub(at) > timeout
+        {
+            // Not refreshed in time: the template is gone, and this data
+            // waits for the next copy like any data without a template.
+            self.templates.remove(&key);
+            self.refreshed.remove(&key);
+            self.counters.templates_expired += 1;
+        }
         if !self.templates.contains_key(&key) {
             let from_exporter = self
                 .held

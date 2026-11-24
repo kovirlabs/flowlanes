@@ -1,0 +1,1183 @@
+{
+  "benchmark": "flowlanes collector, loopback UDP load (R5)",
+  "machine": "ryzen",
+  "machine_desc": "Ryzen 7 5700X, 8 cores / 16 threads, Windows 11 Home build 26300, bare metal",
+  "os_build": "Microsoft Windows [Version 10.0.26300.10075]",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "profile": "release",
+  "flowlanes": {
+    "commit": "0366665d10d1ae2dd6d49c2ec0206ab572c20bb8",
+    "branch": "m2-staged-collector",
+    "uncommitted_changes": false
+  },
+  "stagelanes": {
+    "commit": "3f276311f6c006c92288f0f3b0812f56d533f1d6",
+    "branch": "main",
+    "uncommitted_changes": false
+  },
+  "command": "flowlanes-bench.exe --machine ryzen --machine-desc Ryzen 7 5700X, 8 cores / 16 threads, Windows 11 Home build 26300, bare metal --date 2026-11-23 --rates 1000,5000,10000,20000,30000,40000,50000,60000,80000 --note Quiet system: no build or benchmark running, no GitHub Actions runner process, Docker Desktop not running, Balanced power plan. The run was started by a Claude Code session, which stays open. Loopback only.",
+  "utc_date": "2026-11-24",
+  "utc_time": "00:02:06Z",
+  "note": "Quiet system: no build or benchmark running, no GitHub Actions runner process, Docker Desktop not running, Balanced power plan. The run was started by a Claude Code session, which stays open. Loopback only.",
+  "method": {
+    "path": "sender thread and collector in one process, UDP over loopback; no network card",
+    "traffic": "IPFIX, one data set of --per-packet IPv4 flow records per datagram, a template before every --template-every data packets, evenly spaced",
+    "per_packet": 24,
+    "template_every": 20,
+    "measured_secs": 10,
+    "warmup_secs": 2,
+    "idle": "Backoff { spins: 2000, sleep: 1ms }",
+    "priority": "Normal",
+    "sink": "null (lines are formatted, then discarded)",
+    "sender_cpu": "14",
+    "latency_send_to_flush": "per record, from the packet's scheduled send time to the flush of its line; warm-up excluded",
+    "latency_receipt_to_flush": "per record, from the receive stage's read to the flush; warm-up excluded",
+    "lossless": "every datagram sent was read and every record sent was written"
+  },
+  "highest_lossless_achieved_records_per_sec": 960001.432002136,
+  "steps": [
+    {
+      "target_packets_per_sec": 1000,
+      "target_records_per_sec": 24000,
+      "data_packets_sent": 12000,
+      "template_packets_sent": 600,
+      "datagram_bytes": 1364,
+      "send_secs": 11.999008,
+      "achieved_packets_per_sec": 1000.0826735010095,
+      "achieved_records_per_sec": 24001.984164024227,
+      "sender_max_lag_us": 603.8,
+      "drain_secs_after_last_send": 0.40048110000000037,
+      "datagrams_read": 12600,
+      "datagrams_sent_not_read": 0,
+      "records_sent": 288000,
+      "records_written": 288000,
+      "records_lost": 0,
+      "sequence_missing": 0,
+      "lossless": true,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 240000,
+        "p50_us": 2293.759,
+        "p99_us": 4325.375,
+        "p99_9_us": 5767.167,
+        "max_us": 8646.2
+      },
+      "latency_receipt_to_flush": {
+        "records": 240072,
+        "p50_us": 2293.759,
+        "p99_us": 4325.375,
+        "p99_9_us": 5636.095,
+        "max_us": 8636.3
+      },
+      "collector": {
+        "datagrams": 12600,
+        "bytes": 16413600,
+        "recv_errors": 0,
+        "pool_empty_waits": 0,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 288000,
+        "records_failed": 0,
+        "flushes": 7421,
+        "latency_receipt_to_flush": {
+          "records": 240072,
+          "p50_us": 2293.759,
+          "p99_us": 4325.375,
+          "p99_9_us": 5636.095,
+          "max_us": 8636.3
+        },
+        "decoder": {
+          "packets": 12600,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 12600,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 599,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 12000,
+          "data_sets_decoded": 12000,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 288000,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 0,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54958",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 12600,
+          "idle_polls": 4,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 8342,
+          "idle_polls": 16170560,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 7898,
+          "idle_polls": 14751626,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 7421,
+          "idle_polls": 14716026,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 5000,
+      "target_records_per_sec": 120000,
+      "data_packets_sent": 60000,
+      "template_packets_sent": 3000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.9998072,
+      "achieved_packets_per_sec": 5000.080334624044,
+      "achieved_records_per_sec": 120001.92803097704,
+      "sender_max_lag_us": 1935.5,
+      "drain_secs_after_last_send": 0.40015730000000005,
+      "datagrams_read": 63000,
+      "datagrams_sent_not_read": 0,
+      "records_sent": 1440000,
+      "records_written": 1440000,
+      "records_lost": 0,
+      "sequence_missing": 0,
+      "lossless": true,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 1200000,
+        "p50_us": 2228.223,
+        "p99_us": 3473.407,
+        "p99_9_us": 4456.447,
+        "max_us": 6295.1
+      },
+      "latency_receipt_to_flush": {
+        "records": 1200264,
+        "p50_us": 2228.223,
+        "p99_us": 3473.407,
+        "p99_9_us": 4456.447,
+        "max_us": 6285.6
+      },
+      "collector": {
+        "datagrams": 63000,
+        "bytes": 82068000,
+        "recv_errors": 0,
+        "pool_empty_waits": 0,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 1440000,
+        "records_failed": 0,
+        "flushes": 8021,
+        "latency_receipt_to_flush": {
+          "records": 1200264,
+          "p50_us": 2228.223,
+          "p99_us": 3473.407,
+          "p99_9_us": 4456.447,
+          "max_us": 6285.6
+        },
+        "decoder": {
+          "packets": 63000,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 63000,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 2999,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 60000,
+          "data_sets_decoded": 60000,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 1440000,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 0,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54960",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 63000,
+          "idle_polls": 4,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 12041,
+          "idle_polls": 17619373,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 7888,
+          "idle_polls": 15582179,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 8023,
+          "idle_polls": 15761642,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 10000,
+      "target_records_per_sec": 240000,
+      "data_packets_sent": 120000,
+      "template_packets_sent": 6000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.9999071,
+      "achieved_packets_per_sec": 10000.077417266006,
+      "achieved_records_per_sec": 240001.85801438414,
+      "sender_max_lag_us": 2015.2,
+      "drain_secs_after_last_send": 0.40033910000000006,
+      "datagrams_read": 126000,
+      "datagrams_sent_not_read": 0,
+      "records_sent": 2880000,
+      "records_written": 2880000,
+      "records_lost": 0,
+      "sequence_missing": 0,
+      "lossless": true,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 2400000,
+        "p50_us": 2359.295,
+        "p99_us": 3473.407,
+        "p99_9_us": 7602.175,
+        "max_us": 17015.8
+      },
+      "latency_receipt_to_flush": {
+        "records": 2400384,
+        "p50_us": 2359.295,
+        "p99_us": 3473.407,
+        "p99_9_us": 7602.175,
+        "max_us": 17007.4
+      },
+      "collector": {
+        "datagrams": 126000,
+        "bytes": 164136000,
+        "recv_errors": 0,
+        "pool_empty_waits": 0,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 2880000,
+        "records_failed": 0,
+        "flushes": 9631,
+        "latency_receipt_to_flush": {
+          "records": 2400384,
+          "p50_us": 2359.295,
+          "p99_us": 3473.407,
+          "p99_9_us": 7602.175,
+          "max_us": 17007.4
+        },
+        "decoder": {
+          "packets": 126000,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 126000,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 5999,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 120000,
+          "data_sets_decoded": 120000,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 2880000,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 0,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54962",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 126000,
+          "idle_polls": 4,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 18965,
+          "idle_polls": 19222096,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 7889,
+          "idle_polls": 15671382,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 9644,
+          "idle_polls": 17337612,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 20000,
+      "target_records_per_sec": 480000,
+      "data_packets_sent": 240000,
+      "template_packets_sent": 12000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.9999572,
+      "achieved_packets_per_sec": 20000.071333587755,
+      "achieved_records_per_sec": 480001.7120061061,
+      "sender_max_lag_us": 188.0,
+      "drain_secs_after_last_send": 0.4006640999999984,
+      "datagrams_read": 252000,
+      "datagrams_sent_not_read": 0,
+      "records_sent": 5760000,
+      "records_written": 5760000,
+      "records_lost": 0,
+      "sequence_missing": 0,
+      "lossless": true,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 4800000,
+        "p50_us": 1802.239,
+        "p99_us": 3866.623,
+        "p99_9_us": 4587.519,
+        "max_us": 4827.4
+      },
+      "latency_receipt_to_flush": {
+        "records": 4800360,
+        "p50_us": 1802.239,
+        "p99_us": 3866.623,
+        "p99_9_us": 4587.519,
+        "max_us": 4818.9
+      },
+      "collector": {
+        "datagrams": 252000,
+        "bytes": 328272000,
+        "recv_errors": 0,
+        "pool_empty_waits": 0,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 5760000,
+        "records_failed": 0,
+        "flushes": 90456,
+        "latency_receipt_to_flush": {
+          "records": 4800360,
+          "p50_us": 1802.239,
+          "p99_us": 3866.623,
+          "p99_9_us": 4587.519,
+          "max_us": 4818.9
+        },
+        "decoder": {
+          "packets": 252000,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 252000,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 11999,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 240000,
+          "data_sets_decoded": 240000,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 5760000,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 0,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54964",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 252000,
+          "idle_polls": 4,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 57005,
+          "idle_polls": 75795665,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 11494,
+          "idle_polls": 9176117,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 91997,
+          "idle_polls": 94824301,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 30000,
+      "target_records_per_sec": 720000,
+      "data_packets_sent": 360000,
+      "template_packets_sent": 18000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.9998539,
+      "achieved_packets_per_sec": 30000.365254446973,
+      "achieved_records_per_sec": 720008.7661067274,
+      "sender_max_lag_us": 452.553,
+      "drain_secs_after_last_send": 0.400355900000001,
+      "datagrams_read": 378000,
+      "datagrams_sent_not_read": 0,
+      "records_sent": 8640000,
+      "records_written": 8640000,
+      "records_lost": 0,
+      "sequence_missing": 0,
+      "lossless": true,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 7200000,
+        "p50_us": 39.935,
+        "p99_us": 2686.975,
+        "p99_9_us": 4456.447,
+        "max_us": 4627.571
+      },
+      "latency_receipt_to_flush": {
+        "records": 7200024,
+        "p50_us": 30.719,
+        "p99_us": 2686.975,
+        "p99_9_us": 4325.375,
+        "max_us": 4580.7
+      },
+      "collector": {
+        "datagrams": 378000,
+        "bytes": 492408000,
+        "recv_errors": 0,
+        "pool_empty_waits": 0,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 8640000,
+        "records_failed": 0,
+        "flushes": 344934,
+        "latency_receipt_to_flush": {
+          "records": 7200024,
+          "p50_us": 30.719,
+          "p99_us": 2686.975,
+          "p99_9_us": 4325.375,
+          "max_us": 4580.7
+        },
+        "decoder": {
+          "packets": 378000,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 378000,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 17999,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 360000,
+          "data_sets_decoded": 360000,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 8640000,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 0,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54966",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 378000,
+          "idle_polls": 4,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 373154,
+          "idle_polls": 502212711,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 338385,
+          "idle_polls": 193710819,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 345166,
+          "idle_polls": 566952930,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 40000,
+      "target_records_per_sec": 960000,
+      "data_packets_sent": 480000,
+      "template_packets_sent": 24000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.9999821,
+      "achieved_packets_per_sec": 40000.05966675567,
+      "achieved_records_per_sec": 960001.432002136,
+      "sender_max_lag_us": 1099.7,
+      "drain_secs_after_last_send": 0.4003319999999988,
+      "datagrams_read": 504000,
+      "datagrams_sent_not_read": 0,
+      "records_sent": 11520000,
+      "records_written": 11520000,
+      "records_lost": 0,
+      "sequence_missing": 0,
+      "lossless": true,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 9600000,
+        "p50_us": 39.935,
+        "p99_us": 2949.119,
+        "p99_9_us": 4325.375,
+        "max_us": 4647.0
+      },
+      "latency_receipt_to_flush": {
+        "records": 9601872,
+        "p50_us": 31.231,
+        "p99_us": 2949.119,
+        "p99_9_us": 4128.767,
+        "max_us": 4567.9
+      },
+      "collector": {
+        "datagrams": 504000,
+        "bytes": 656544000,
+        "recv_errors": 0,
+        "pool_empty_waits": 0,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 11520000,
+        "records_failed": 0,
+        "flushes": 474625,
+        "latency_receipt_to_flush": {
+          "records": 9601872,
+          "p50_us": 31.231,
+          "p99_us": 2949.119,
+          "p99_9_us": 4128.767,
+          "max_us": 4567.9
+        },
+        "decoder": {
+          "packets": 504000,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 504000,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 23999,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 480000,
+          "data_sets_decoded": 480000,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 11520000,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 0,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54968",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 504000,
+          "idle_polls": 4,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 499015,
+          "idle_polls": 450823657,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 411349,
+          "idle_polls": 34952940,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 474705,
+          "idle_polls": 585945174,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 50000,
+      "target_records_per_sec": 1200000,
+      "data_packets_sent": 600000,
+      "template_packets_sent": 30000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.9999844,
+      "achieved_packets_per_sec": 50000.0650000845,
+      "achieved_records_per_sec": 1200001.560002028,
+      "sender_max_lag_us": 128.6,
+      "drain_secs_after_last_send": 0.4005010999999996,
+      "datagrams_read": 544065,
+      "datagrams_sent_not_read": 85935,
+      "records_sent": 14400000,
+      "records_written": 12438144,
+      "records_lost": 1961856,
+      "sequence_missing": 1961856,
+      "lossless": false,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 10211832,
+        "p50_us": 171966.463,
+        "p99_us": 174591.3,
+        "p99_9_us": 174591.3,
+        "max_us": 174591.3
+      },
+      "latency_receipt_to_flush": {
+        "records": 10386528,
+        "p50_us": 28311.551,
+        "p99_us": 29884.415,
+        "p99_9_us": 29884.415,
+        "max_us": 30186.2
+      },
+      "collector": {
+        "datagrams": 544065,
+        "bytes": 708862668,
+        "recv_errors": 0,
+        "pool_empty_waits": 197754,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 12438144,
+        "records_failed": 0,
+        "flushes": 517479,
+        "latency_receipt_to_flush": {
+          "records": 10386528,
+          "p50_us": 28311.551,
+          "p99_us": 29884.415,
+          "p99_9_us": 29884.415,
+          "max_us": 30186.2
+        },
+        "decoder": {
+          "packets": 544065,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 544065,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 25808,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 518256,
+          "data_sets_decoded": 518256,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 12438144,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 1961856,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54970",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 544065,
+          "idle_polls": 49504205,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 16015,
+          "idle_polls": 4990449,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 8105,
+          "idle_polls": 2855,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 517492,
+          "idle_polls": 607780960,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 60000,
+      "target_records_per_sec": 1440000,
+      "data_packets_sent": 720000,
+      "template_packets_sent": 36000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.9995079,
+      "achieved_packets_per_sec": 60002.46060090514,
+      "achieved_records_per_sec": 1440059.0544217236,
+      "sender_max_lag_us": 102.9,
+      "drain_secs_after_last_send": 0.4004746000000008,
+      "datagrams_read": 546469,
+      "datagrams_sent_not_read": 209531,
+      "records_sent": 17280000,
+      "records_written": 12494136,
+      "records_lost": 4785864,
+      "sequence_missing": 4785864,
+      "lossless": false,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 10261440,
+        "p50_us": 171966.463,
+        "p99_us": 171966.463,
+        "p99_9_us": 172698.608,
+        "max_us": 172698.608
+      },
+      "latency_receipt_to_flush": {
+        "records": 10436952,
+        "p50_us": 28311.551,
+        "p99_us": 29884.415,
+        "p99_9_us": 29884.415,
+        "max_us": 30169.9
+      },
+      "collector": {
+        "datagrams": 546469,
+        "bytes": 712050276,
+        "recv_errors": 0,
+        "pool_empty_waits": 208823,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 12494136,
+        "records_failed": 0,
+        "flushes": 519641,
+        "latency_receipt_to_flush": {
+          "records": 10436952,
+          "p50_us": 28311.551,
+          "p99_us": 29884.415,
+          "p99_9_us": 29884.415,
+          "max_us": 30169.9
+        },
+        "decoder": {
+          "packets": 546469,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 546469,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 25879,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 520589,
+          "data_sets_decoded": 520589,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 12494136,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 4785864,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54972",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 546469,
+          "idle_polls": 51015881,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 11845,
+          "idle_polls": 1606794,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 8140,
+          "idle_polls": 2830,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 519657,
+          "idle_polls": 606254855,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    },
+    {
+      "target_packets_per_sec": 80000,
+      "target_records_per_sec": 1920000,
+      "data_packets_sent": 960000,
+      "template_packets_sent": 48000,
+      "datagram_bytes": 1364,
+      "send_secs": 11.999992,
+      "achieved_packets_per_sec": 80000.05333336888,
+      "achieved_records_per_sec": 1920001.2800008531,
+      "sender_max_lag_us": 99.0,
+      "drain_secs_after_last_send": 0.4004393999999998,
+      "datagrams_read": 547811,
+      "datagrams_sent_not_read": 460189,
+      "records_sent": 23040000,
+      "records_written": 12525384,
+      "records_lost": 10514616,
+      "sequence_missing": 10514616,
+      "lossless": false,
+      "balanced": true,
+      "latency_send_to_flush": {
+        "records": 10295784,
+        "p50_us": 171966.463,
+        "p99_us": 173439.0,
+        "p99_9_us": 173439.0,
+        "max_us": 173439.0
+      },
+      "latency_receipt_to_flush": {
+        "records": 10471248,
+        "p50_us": 28311.551,
+        "p99_us": 29360.127,
+        "p99_9_us": 30408.703,
+        "max_us": 30914.2
+      },
+      "collector": {
+        "datagrams": 547811,
+        "bytes": 713829244,
+        "recv_errors": 0,
+        "pool_empty_waits": 201106,
+        "socket_drops": null,
+        "socket_drops_unavailable": "this OS gives no count of datagrams dropped at a full socket buffer; loss shows as sequence gaps",
+        "lines_written": 12525384,
+        "records_failed": 0,
+        "flushes": 520871,
+        "latency_receipt_to_flush": {
+          "records": 10471248,
+          "p50_us": 28311.551,
+          "p99_us": 29360.127,
+          "p99_9_us": 30408.703,
+          "max_us": 30914.2
+        },
+        "decoder": {
+          "packets": 547811,
+          "packets_v5": 0,
+          "packets_v9": 0,
+          "packets_ipfix": 547811,
+          "packets_malformed": 0,
+          "packet_errors": {},
+          "sets_malformed": 0,
+          "sets_reserved_id": 0,
+          "templates_added": 1,
+          "templates_replaced": 25919,
+          "templates_malformed": 0,
+          "templates_expired": 0,
+          "withdrawals_applied": 0,
+          "withdrawals_ignored": 0,
+          "data_sets": 521891,
+          "data_sets_decoded": 521891,
+          "data_sets_held": 0,
+          "data_sets_released": 0,
+          "data_sets_rejected_no_template": 0,
+          "data_sets_malformed": 0,
+          "data_sets_held_now": 0,
+          "records_out": 12525384,
+          "options_records_out": 0,
+          "records_malformed": 0,
+          "sequence_missing": 10514616,
+          "sequence_out_of_order": 0,
+          "sets_balance": true
+        }
+      },
+      "start": {
+        "listen": "127.0.0.1:54974",
+        "recv_buffer_asked": 8388608,
+        "recv_buffer_granted": 8388608,
+        "blocks": 256,
+        "block_bytes": 65536,
+        "pool_locked": true,
+        "stage_cpus": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "notes": []
+      },
+      "stages": [
+        {
+          "name": "flowlanes-receive",
+          "cpu": "2",
+          "busy_polls": 547811,
+          "idle_polls": 51642487,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-decode",
+          "cpu": "4",
+          "busy_polls": 10147,
+          "idle_polls": 410759,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-encode",
+          "cpu": "6",
+          "busy_polls": 8155,
+          "idle_polls": 4201,
+          "setup_errors": []
+        },
+        {
+          "name": "flowlanes-output",
+          "cpu": "8",
+          "busy_polls": 520888,
+          "idle_polls": 607400997,
+          "setup_errors": []
+        }
+      ],
+      "sender_notes": []
+    }
+  ]
+}

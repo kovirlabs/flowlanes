@@ -16,7 +16,7 @@ background is `../paralanes/docs/ROADMAP.md` (project 3).
 | Repo | Role | Used here as |
 | --- | --- | --- |
 | `flowlanes` (this repo) | Decoder library, collector, detectors, Wazuh pack | — |
-| `../stagelanes` | Pinned stages, rings, pinned memory | Path dependency, read-only. `stagelanes-pipe` is on branch `m6-stage-pipeline` |
+| `../stagelanes` | Pinned stages, rings, pinned memory | Path dependency, read-only. `stagelanes-pipe` is on `main` |
 | `../bytelanes` | The fixed-point FFT, for beaconing detection (M5) | Path dependency, read-only |
 | `../rulelanes` | Decode-and-match engine; a consumer of this repo's events | Sibling; no code dependency |
 | `../paralanes` | Roadmap and the measurements this design rests on | Read-only |
@@ -27,7 +27,12 @@ status file and stop that task.
 
 ## Hard rules
 
-- **Agents never merge, tag, publish or push.** There is no remote yet.
+- **Agents push their own branches and open pull requests without asking.**
+  The remote is `kovirlabs/flowlanes`. Never push to `main`.
+- **Agents merge a pull request only when Evan asks for that merge.** They
+  never tag or publish.
+- **Run files carry no local paths.** A recorded command names the program,
+  not the directory it ran from, so no user name reaches the repo.
 - **One milestone per session unless Evan says otherwise.** Stop at the
   gate.
 - **Decoding follows the RFCs and is cross-checked.** NetFlow v9 is RFC
@@ -94,6 +99,8 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p flowlanes -- decode <file>        # decode a file of export packets to JSON lines
 cargo run -p flowlanes -- generate --help      # generated export packets for tests and load
+cargo run --release -p flowlanes -- collect --out <file>   # receive UDP 2055, write JSON lines
+cargo run --release -p flowlanes-bench -- --machine <name> --machine-desc <text>   # R5 load run, writes a run file
 ```
 
 ## Machines and network
