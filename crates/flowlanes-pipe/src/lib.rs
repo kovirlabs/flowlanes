@@ -34,7 +34,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use flowlanes_wire::{Counters, Record};
+use flowlanes_wire::{Counters, Record, TemplateChange};
 use hist::Histogram;
 use platform::SocketDrops;
 use serde_json::{Value as J, json};
@@ -186,6 +186,8 @@ struct Shared {
     flushes: AtomicU64,
     wire: Mutex<Counters>,
     latency: Mutex<Histogram>,
+    /// New or changed templates not yet taken (`wire.report_templates`).
+    templates: Mutex<Vec<TemplateChange>>,
 }
 
 /// A copy of every counter at one moment.
@@ -581,6 +583,12 @@ impl<S: Sink> Pipeline<S> {
                     let got = pkt_rx.recv_with(64, |p: Packet| {
                         let bytes = &p.block.as_slice()[..p.len as usize];
                         let records = collector.decode(p.src, bytes, start.elapsed().as_secs());
+                        let changes = collector.take_template_changes();
+                        if !changes.is_empty()
+                            && let Ok(mut t) = shared.templates.lock()
+                        {
+                            t.extend(changes);
+                        }
                         blk_tx.send(p.block);
                         if !records.is_empty() {
                             dec_tx.send(Decoded {
@@ -738,6 +746,16 @@ impl<S: Sink> Pipeline<S> {
     /// 4,096 packets under load.
     pub fn snapshot(&self) -> Snapshot {
         self.shared.snapshot(self.info.local.port())
+    }
+
+    /// Templates that were new or changed since the last call. Empty unless
+    /// `Config::wire.report_templates` is set.
+    pub fn take_template_changes(&self) -> Vec<TemplateChange> {
+        self.shared
+            .templates
+            .lock()
+            .map(|mut t| std::mem::take(&mut *t))
+            .unwrap_or_default()
     }
 
     /// Forgets the latency recorded so far (for a warm-up).

@@ -212,6 +212,10 @@ pub struct Config {
     /// "SHOULD default to at least 3 times the observed retransmission
     /// rate". Neither gives a number; the default here is a placeholder.
     pub template_timeout_secs: u64,
+    /// Keep a [`TemplateChange`] for every template that is new or differs
+    /// from the one it replaces, for [`Collector::take_template_changes`].
+    /// Off by default, so a caller that never takes them keeps nothing.
+    pub report_templates: bool,
 }
 
 impl Default for Config {
@@ -225,10 +229,23 @@ impl Default for Config {
     }
 }
 
+            report_templates: false,
 struct Held {
     key: TemplateKey,
     set: Vec<u8>,
     export_time: u32,
+/// A template that arrived for the first time, or with a different layout
+/// than the one it replaced. Structure only: the exporter's address is not
+/// part of it, so it can be logged without naming a host.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TemplateChange {
+    pub version: Version,
+    pub domain: u32,
+    /// True when an earlier template with this key had a different layout.
+    pub changed: bool,
+    pub template: Template,
+}
+
     sequence: u32,
     received: u64,
 }
@@ -251,6 +268,8 @@ pub struct Collector {
 
 impl Default for Collector {
     fn default() -> Self {
+    /// New or changed templates, when [`Config::report_templates`] is set.
+    template_changes: Vec<TemplateChange>,
         Collector::new(Config::default())
     }
 }
@@ -325,7 +344,14 @@ impl Collector {
     }
 
     pub fn template(&self, key: &TemplateKey) -> Option<&Template> {
+            template_changes: Vec::new(),
         self.templates.get(key)
+    }
+
+    /// Templates that were new or changed since the last call (only kept
+    /// when [`Config::report_templates`] is set).
+    pub fn take_template_changes(&mut self) -> Vec<TemplateChange> {
+        std::mem::take(&mut self.template_changes)
     }
 
     pub fn template_count(&self) -> usize {
@@ -756,7 +782,19 @@ impl Collector {
             return;
         }
         self.refreshed.insert(key, self.now);
-        match self.templates.insert(key, t) {
+        let report = self.config.report_templates.then(|| t.clone());
+        let old = self.templates.insert(key, t);
+        if let Some(template) = report
+            && old.as_ref() != Some(&template)
+        {
+            self.template_changes.push(TemplateChange {
+                version: key.version,
+                domain: key.domain,
+                changed: old.is_some(),
+                template,
+            });
+        }
+        match old {
             Some(_) => self.counters.templates_replaced += 1,
             None => self.counters.templates_added += 1,
         }
