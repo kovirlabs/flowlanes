@@ -1,5 +1,6 @@
 //! `flowlanes collect`: the staged collector as a program.
 
+use flowlanes_pipe::json::template_json;
 use flowlanes_pipe::{Config, DEFAULT_PORT, Idle, JsonLines, Pipeline, Priority};
 use serde_json::json;
 use std::io::Write;
@@ -35,6 +36,11 @@ fn parse(args: &[String]) -> Result<Options, String> {
             }
             "--honor-withdrawals" => {
                 o.config.wire.honor_withdrawals = true;
+                i += 1;
+                continue;
+            }
+            "--log-templates" => {
+                o.config.wire.report_templates = true;
                 i += 1;
                 continue;
             }
@@ -123,6 +129,11 @@ pub fn collect(args: &[String], usage: &str) -> ExitCode {
     while !stop.load(Relaxed) {
         std::thread::sleep(Duration::from_millis(100));
         let secs = started.elapsed().as_secs();
+        for t in pipeline.take_template_changes() {
+            let mut e = template_json(&t);
+            e["uptime_secs"] = json!(secs);
+            eprintln!("{e}");
+        }
         if o.duration.is_some_and(|d| secs >= d) {
             break;
         }

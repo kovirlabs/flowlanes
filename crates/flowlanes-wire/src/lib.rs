@@ -212,17 +212,38 @@ pub struct Config {
     /// "SHOULD default to at least 3 times the observed retransmission
     /// rate". Neither gives a number; the default here is a placeholder.
     pub template_timeout_secs: u64,
+    /// Keep a [`TemplateChange`] for every template that is new or differs
+    /// from the one it replaces, for [`Collector::take_template_changes`].
+    /// Off by default, so a caller that never takes them keeps nothing.
+    pub report_templates: bool,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
             hold_max_sets: 256,
-            hold_max_age_secs: 60,
+            // A UniFi gateway re-sends its templates about every 5 minutes
+            // (observed 2026-11-23, docs/unifi.md); data that arrives after
+            // a collector start waits that long for them. 900 s is 3 times
+            // that interval, as RFC 7011 §8.4 suggests for template lifetimes.
+            hold_max_age_secs: 900,
             honor_withdrawals: false,
             template_timeout_secs: 1800,
+            report_templates: false,
         }
     }
+}
+
+/// A template that arrived for the first time, or with a different layout
+/// than the one it replaced. Structure only: the exporter's address is not
+/// part of it, so it can be logged without naming a host.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TemplateChange {
+    pub version: Version,
+    pub domain: u32,
+    /// True when an earlier template with this key had a different layout.
+    pub changed: bool,
+    pub template: Template,
 }
 
 struct Held {
@@ -247,6 +268,8 @@ pub struct Collector {
     next_seq: HashMap<(IpAddr, Version, u32), u32>,
     /// Records decoded from held data when its template arrived.
     released: Vec<Record>,
+    /// New or changed templates, when [`Config::report_templates`] is set.
+    template_changes: Vec<TemplateChange>,
 }
 
 impl Default for Collector {
@@ -291,10 +314,20 @@ pub fn decode_value(id: u16, enterprise: Option<u32>, raw: &[u8]) -> (Option<&'s
             a.copy_from_slice(raw);
             Value::Mac(a)
         }
-        IeType::Str => match std::str::from_utf8(raw) {
-            Ok(s) => Value::Str(s.to_string()),
-            Err(_) => Value::Bytes(raw.to_vec()),
-        },
+        // A string in a fixed-length field is padded with NUL bytes after
+        // the text (seen from a UniFi gateway: interfaceName in 16 bytes,
+        // interfaceDescription in 32). The padding is not part of the
+        // string, so it is cut; text that is not UTF-8 stays raw bytes.
+        IeType::Str => {
+            let text = raw
+                .iter()
+                .rposition(|&b| b != 0)
+                .map_or(&raw[..0], |last| &raw[..=last]);
+            match std::str::from_utf8(text) {
+                Ok(s) => Value::Str(s.to_string()),
+                Err(_) => Value::Bytes(raw.to_vec()),
+            }
+        }
         _ => Value::Bytes(raw.to_vec()),
     };
     (Some(name), v)
@@ -311,7 +344,14 @@ impl Collector {
             held: VecDeque::new(),
             next_seq: HashMap::new(),
             released: Vec::new(),
+            template_changes: Vec::new(),
         }
+    }
+
+    /// Templates that were new or changed since the last call (only kept
+    /// when [`Config::report_templates`] is set).
+    pub fn take_template_changes(&mut self) -> Vec<TemplateChange> {
+        std::mem::take(&mut self.template_changes)
     }
 
     pub fn template(&self, key: &TemplateKey) -> Option<&Template> {
@@ -746,7 +786,19 @@ impl Collector {
             return;
         }
         self.refreshed.insert(key, self.now);
-        match self.templates.insert(key, t) {
+        let report = self.config.report_templates.then(|| t.clone());
+        let old = self.templates.insert(key, t);
+        if let Some(template) = report
+            && old.as_ref() != Some(&template)
+        {
+            self.template_changes.push(TemplateChange {
+                version: key.version,
+                domain: key.domain,
+                changed: old.is_some(),
+                template,
+            });
+        }
+        match old {
             Some(_) => self.counters.templates_replaced += 1,
             None => self.counters.templates_added += 1,
         }

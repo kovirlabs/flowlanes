@@ -8,6 +8,8 @@
 //! number for documentation (RFC 5612).
 #![forbid(unsafe_code)]
 
+pub mod unifi;
+
 use flowlanes_wire::{FieldSpec, VARLEN, Value};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 

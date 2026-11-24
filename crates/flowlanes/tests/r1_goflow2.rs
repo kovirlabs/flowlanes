@@ -4,7 +4,7 @@
 //! `flowlanes-wire`.
 //!
 //! The test starts its own goflow2 container bound to 127.0.0.1, sends
-//! generated v5, v9 and IPFIX packets to it over UDP on this machine,
+//! generated v5, v9 and IPFIX packets (including the UniFi gateway's layout) to it over UDP on this machine,
 //! reads goflow2's JSON output and compares. It prints SKIPPED and passes
 //! when Docker or the image is not available, or when
 //! `FLOWLANES_SKIP_LIVE` is set.
@@ -148,6 +148,9 @@ fn r1_cross_check_with_goflow2() {
     for (v, seed) in [(5u16, 101u64), (9, 102), (10, 103)] {
         packets.extend(flowlanes_gen::traffic(v, seed, 12, 15).0);
     }
+    // IPFIX in the layout a UniFi gateway sends (docs/unifi.md).
+    packets.extend(flowlanes_gen::unifi::traffic_sampled(104, 12, 15));
+    packets.extend(flowlanes_gen::unifi::traffic(105, 12, 15));
     let mut c = Collector::default();
     let mut expect: Vec<Key> = Vec::new();
     for p in &packets {

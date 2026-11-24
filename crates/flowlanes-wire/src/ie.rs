@@ -2,7 +2,8 @@
 //!
 //! IDs, names and abstract data types are from the IANA "IP Flow Information
 //! Export (IPFIX) Entities" registry (ipfix-information-elements.csv,
-//! fetched 2026-11-22). NetFlow v9 field types 1-127 use the same numbers
+//! fetched 2026-11-22; the elements a UniFi gateway was seen to send were
+//! added from the copy fetched 2026-11-23). NetFlow v9 field types 1-127 use the same numbers
 //! (RFC 3954 §8, RFC 7012). An element not listed here, and every
 //! enterprise-specific element, is kept as its ID and raw bytes (R4).
 
@@ -46,12 +47,17 @@ pub const KNOWN: &[(u16, &str, IeType)] = &[
     (32, "icmpTypeCodeIPv4", IeType::Unsigned),
     (34, "samplingInterval", IeType::Unsigned),
     (35, "samplingAlgorithm", IeType::Unsigned),
+    (40, "exportedOctetTotalCount", IeType::Unsigned),
+    (41, "exportedMessageTotalCount", IeType::Unsigned),
+    (42, "exportedFlowRecordTotalCount", IeType::Unsigned),
     (56, "sourceMacAddress", IeType::Mac),
     (58, "vlanId", IeType::Unsigned),
     (60, "ipVersion", IeType::Unsigned),
     (61, "flowDirection", IeType::Unsigned),
     (62, "ipNextHopIPv6Address", IeType::Ipv6),
     (80, "destinationMacAddress", IeType::Mac),
+    (82, "interfaceName", IeType::Str),
+    (83, "interfaceDescription", IeType::Str),
     (95, "applicationId", IeType::Octets),
     (96, "applicationName", IeType::Str),
     (130, "exporterIPv4Address", IeType::Ipv4),
@@ -65,14 +71,25 @@ pub const KNOWN: &[(u16, &str, IeType)] = &[
     (152, "flowStartMilliseconds", IeType::DateTimeMillis),
     (153, "flowEndMilliseconds", IeType::DateTimeMillis),
     (160, "systemInitTimeMilliseconds", IeType::DateTimeMillis),
+    (163, "observedFlowTotalCount", IeType::Unsigned),
     (176, "icmpTypeIPv4", IeType::Unsigned),
     (177, "icmpCodeIPv4", IeType::Unsigned),
+    (209, "tcpOptions", IeType::Unsigned),
     (210, "paddingOctets", IeType::Octets),
     (225, "postNATSourceIPv4Address", IeType::Ipv4),
     (226, "postNATDestinationIPv4Address", IeType::Ipv4),
     (227, "postNAPTSourceTransportPort", IeType::Unsigned),
     (228, "postNAPTDestinationTransportPort", IeType::Unsigned),
     (230, "natEvent", IeType::Unsigned),
+    (256, "ethernetType", IeType::Unsigned),
+    (300, "observationDomainName", IeType::Str),
+    (302, "selectorId", IeType::Unsigned),
+    (309, "samplingSize", IeType::Unsigned),
+    (310, "samplingPopulation", IeType::Unsigned),
+    (318, "selectorIdTotalPktsObserved", IeType::Unsigned),
+    (319, "selectorIdTotalPktsSelected", IeType::Unsigned),
+    (390, "flowSelectorAlgorithm", IeType::Unsigned),
+    (395, "selectorIDTotalFlowsSelected", IeType::Unsigned),
 ];
 
 /// Name and type of an IANA element, if flowlanes knows it.

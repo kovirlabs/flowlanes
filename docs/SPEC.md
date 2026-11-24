@@ -68,6 +68,11 @@ whether the switches export at all or only the gateway. M0 result
 sampling is off by default; the active timeout is 5 minutes; templates are
 re-sent every 20 packets; UniFi switches do not export flows; the template
 field list and any enterprise elements are not publicly documented.
+Observed on Evan's gateway on 2026-11-23 (`docs/unifi.md`,
+`docs/status/ops-unifi-live.md`): IPFIX, IPv4 only, IANA elements only (no
+enterprise elements, no NAT elements), template layouts that depend on the
+sampling setting, sampling on (1 out of 512) until Evan switched it off,
+and templates re-sent more often the more the gateway exports.
 
 ## 5. Architecture
 

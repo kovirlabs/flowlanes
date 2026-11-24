@@ -1,7 +1,7 @@
 //! Records and counters as JSON. One `flow` event per line is the
 //! collector's output format.
 
-use flowlanes_wire::{Counters, Record, Value};
+use flowlanes_wire::{Counters, Record, TemplateChange, VARLEN, Value, ie};
 use serde_json::{Map, Value as J, json};
 use std::io::Write;
 
@@ -189,6 +189,35 @@ pub fn write_record(out: &mut Vec<u8>, r: &Record) {
     out.extend_from_slice(b"}\n");
 }
 
+/// A new or changed template as a `template` event: its layout only, with
+/// no exporter address, so it can be logged and shared without naming a
+/// host. Fields are in template order; scope fields come first.
+pub fn template_json(t: &TemplateChange) -> J {
+    let fields: Vec<J> = t
+        .template
+        .fields
+        .iter()
+        .map(|f| {
+            json!({
+                "id": f.id,
+                "enterprise": f.enterprise,
+                "length": if f.length == VARLEN { J::from("variable") } else { J::from(f.length) },
+                "name": if f.enterprise.is_none() { ie::lookup(f.id).map(|(n, _)| n) } else { None },
+            })
+        })
+        .collect();
+    json!({
+        "event": "template",
+        "version": t.version.number(),
+        "domain": t.domain,
+        "template_id": t.template.id,
+        "options": t.template.options,
+        "scope_fields": t.template.scope_fields,
+        "changed": t.changed,
+        "fields": fields,
+    })
+}
+
 pub fn counters_json(c: &Counters) -> J {
     let mut errors = Map::new();
     let mut e: Vec<_> = c.packet_errors.iter().collect();
@@ -239,6 +268,49 @@ mod tests {
         write_record(&mut fast, r);
         let slow = record_json(r).to_string() + "\n";
         assert_eq!(String::from_utf8(fast).expect("UTF-8"), slow);
+    }
+
+    #[test]
+    fn a_template_event_has_the_layout_and_no_address() {
+        use flowlanes_wire::{FieldSpec, Template, TemplateChange, Version};
+        let t = TemplateChange {
+            version: Version::Ipfix,
+            domain: 0,
+            changed: false,
+            template: Template {
+                id: 258,
+                fields: vec![
+                    FieldSpec {
+                        id: 149,
+                        enterprise: None,
+                        length: 4,
+                    },
+                    FieldSpec {
+                        id: 82,
+                        enterprise: None,
+                        length: VARLEN,
+                    },
+                    FieldSpec {
+                        id: 7,
+                        enterprise: Some(32473),
+                        length: 2,
+                    },
+                ],
+                scope_fields: 1,
+                options: true,
+            },
+        };
+        let j = template_json(&t);
+        assert_eq!(j["event"], "template");
+        assert_eq!(j["template_id"], 258);
+        assert_eq!(j["scope_fields"], 1);
+        assert_eq!(j["fields"][0]["name"], "observationDomainId");
+        assert_eq!(j["fields"][1]["length"], "variable");
+        assert_eq!(j["fields"][1]["name"], "interfaceName");
+        // An enterprise element is never given an IANA name.
+        assert!(j["fields"][2]["name"].is_null());
+        assert_eq!(j["fields"][2]["enterprise"], 32473);
+        assert!(j.get("exporter").is_none());
     }
 
     #[test]
