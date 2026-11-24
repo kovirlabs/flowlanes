@@ -415,7 +415,7 @@ fn main() -> ExitCode {
         "profile": if cfg!(debug_assertions) { "debug" } else { "release" },
         "flowlanes": git("."),
         "stagelanes": git("../stagelanes"),
-        "command": std::env::args().collect::<Vec<_>>().join(" "),
+        "command": command_line(),
         "utc_date": utc_date(),
         "utc_time": format!(
             "{:02}:{:02}:{:02}Z",
@@ -465,4 +465,19 @@ fn main() -> ExitCode {
     }
     eprintln!("wrote {}", path.display());
     ExitCode::SUCCESS
+}
+
+/// The command line for the run file. The program is recorded by file name
+/// only, so the run file does not carry the directory it ran from (which
+/// holds the user's name).
+fn command_line() -> String {
+    let mut args = std::env::args();
+    let exe = args.next().unwrap_or_default();
+    let name = std::path::Path::new(&exe)
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned());
+    std::iter::once(name.unwrap_or(exe))
+        .chain(args)
+        .collect::<Vec<_>>()
+        .join(" ")
 }
