@@ -222,18 +222,18 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             hold_max_sets: 256,
-            hold_max_age_secs: 60,
+            // A UniFi gateway re-sends its templates about every 5 minutes
+            // (observed 2026-11-23, docs/unifi.md); data that arrives after
+            // a collector start waits that long for them. 900 s is 3 times
+            // that interval, as RFC 7011 §8.4 suggests for template lifetimes.
+            hold_max_age_secs: 900,
             honor_withdrawals: false,
             template_timeout_secs: 1800,
+            report_templates: false,
         }
     }
 }
 
-            report_templates: false,
-struct Held {
-    key: TemplateKey,
-    set: Vec<u8>,
-    export_time: u32,
 /// A template that arrived for the first time, or with a different layout
 /// than the one it replaced. Structure only: the exporter's address is not
 /// part of it, so it can be logged without naming a host.
@@ -246,6 +246,10 @@ pub struct TemplateChange {
     pub template: Template,
 }
 
+struct Held {
+    key: TemplateKey,
+    set: Vec<u8>,
+    export_time: u32,
     sequence: u32,
     received: u64,
 }
@@ -264,12 +268,12 @@ pub struct Collector {
     next_seq: HashMap<(IpAddr, Version, u32), u32>,
     /// Records decoded from held data when its template arrived.
     released: Vec<Record>,
+    /// New or changed templates, when [`Config::report_templates`] is set.
+    template_changes: Vec<TemplateChange>,
 }
 
 impl Default for Collector {
     fn default() -> Self {
-    /// New or changed templates, when [`Config::report_templates`] is set.
-    template_changes: Vec<TemplateChange>,
         Collector::new(Config::default())
     }
 }
@@ -340,18 +344,18 @@ impl Collector {
             held: VecDeque::new(),
             next_seq: HashMap::new(),
             released: Vec::new(),
-        }
-    }
-
-    pub fn template(&self, key: &TemplateKey) -> Option<&Template> {
             template_changes: Vec::new(),
-        self.templates.get(key)
+        }
     }
 
     /// Templates that were new or changed since the last call (only kept
     /// when [`Config::report_templates`] is set).
     pub fn take_template_changes(&mut self) -> Vec<TemplateChange> {
         std::mem::take(&mut self.template_changes)
+    }
+
+    pub fn template(&self, key: &TemplateKey) -> Option<&Template> {
+        self.templates.get(key)
     }
 
     pub fn template_count(&self) -> usize {

@@ -4,7 +4,7 @@
 //! flowlanes decode <file> [--honor-withdrawals]
 //!     Decode a flowlanes packet file; one JSON object per record on stdout,
 //!     the counters as one JSON object on stderr.
-//! flowlanes generate --kind <v5|v9|ipfix|malformed|mix> [--seed N] [--packets N]
+//! flowlanes generate --kind <v5|v9|ipfix|unifi|malformed|mix> [--seed N] [--packets N]
 //!                    (--out <file> | --udp <host:port>)
 //!     Write generated export packets to a file, or send them over UDP
 //!     (for a cross-check collector on this machine).
@@ -24,13 +24,14 @@ use std::process::ExitCode;
 
 const USAGE: &str = "usage:
   flowlanes decode <file> [--honor-withdrawals]
-  flowlanes generate --kind <v5|v9|ipfix|malformed|mix> [--seed N] [--packets N] (--out <file> | --udp <host:port>)
+  flowlanes generate --kind <v5|v9|ipfix|unifi|malformed|mix> [--seed N] [--packets N] (--out <file> | --udp <host:port>)
   flowlanes collect [--listen ADDR:PORT] [--out FILE] [--recv-buffer BYTES] [--blocks N]
                     [--no-pin] [--priority normal|high|time-critical] [--idle backoff|spin]
                     [--template-timeout SECS] [--hold-sets N] [--hold-secs SECS]
-                    [--honor-withdrawals] [--stats-secs N] [--duration SECS]
+                    [--honor-withdrawals] [--log-templates] [--stats-secs N] [--duration SECS]
       Listens on 0.0.0.0:2055 by default. Records go to FILE (appended) or stdout;
-      counters go to stderr as JSON every --stats-secs (60) and at the end.
+      counters go to stderr as JSON every --stats-secs (60) and at the end;
+      --log-templates also prints each new or changed template's layout there.
       Stops on Ctrl-C or after --duration.";
 
 fn main() -> ExitCode {
@@ -123,6 +124,7 @@ fn generate(args: &[String]) -> ExitCode {
         Some("ipfix") => flowlanes_gen::traffic(10, seed, packets, 20).0,
         Some("malformed") => flowlanes_gen::malformed(seed),
         Some("mix") => flowlanes_gen::mix(seed),
+        Some("unifi") => flowlanes_gen::unifi::traffic(seed, packets, 20),
         _ => {
             eprintln!("flowlanes: --kind is required\n{USAGE}");
             return ExitCode::from(2);
