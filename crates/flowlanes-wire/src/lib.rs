@@ -291,10 +291,20 @@ pub fn decode_value(id: u16, enterprise: Option<u32>, raw: &[u8]) -> (Option<&'s
             a.copy_from_slice(raw);
             Value::Mac(a)
         }
-        IeType::Str => match std::str::from_utf8(raw) {
-            Ok(s) => Value::Str(s.to_string()),
-            Err(_) => Value::Bytes(raw.to_vec()),
-        },
+        // A string in a fixed-length field is padded with NUL bytes after
+        // the text (seen from a UniFi gateway: interfaceName in 16 bytes,
+        // interfaceDescription in 32). The padding is not part of the
+        // string, so it is cut; text that is not UTF-8 stays raw bytes.
+        IeType::Str => {
+            let text = raw
+                .iter()
+                .rposition(|&b| b != 0)
+                .map_or(&raw[..0], |last| &raw[..=last]);
+            match std::str::from_utf8(text) {
+                Ok(s) => Value::Str(s.to_string()),
+                Err(_) => Value::Bytes(raw.to_vec()),
+            }
+        }
         _ => Value::Bytes(raw.to_vec()),
     };
     (Some(name), v)
