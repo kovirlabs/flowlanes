@@ -40,9 +40,9 @@ Elastic, Security Onion, Zabbix or `rulelanes` can read it too.
 | --- | --- | --- |
 | R1 | Decoding is correct | Golden vectors per protocol version, built from the RFCs; property tests that encode generated records and decode them back; the same packets decoded by an existing open collector give the same field values |
 | R2 | Templates are handled as the RFCs say | Templates are kept per exporter address, observation domain (or source ID) and template ID; a template can be replaced or withdrawn (correction, M1: RFC 7011 §8.4 says UDP collectors MUST ignore withdrawals, so they are counted and ignored by default and applied only when configured); data that arrives before its template is held up to a limit, then counted as rejected; options templates are decoded |
-| R3 | No silent loss | Per-exporter sequence gaps, malformed packets, records without a template and socket receive drops are counted and exposed. Records in equals records out plus counted rejects. Without its template the number of records in a data set is unknown, so the decode-side identity is kept per data set (sets in = decoded + rejected + malformed + held) and per record for v5 (M1) |
+| R3 | No silent loss | Per-exporter sequence gaps, malformed packets, records without a template and socket receive drops are counted and exposed. Records in equals records out plus counted rejects. Without its template the number of records in a data set is unknown, so the decode-side identity is kept per data set (sets in = decoded + rejected + malformed + held) and per record for v5 (M1). M2: end to end, datagrams read = packets decoded and records decoded = records written + records the output refused. Socket receive drops are read per socket on Linux; Windows gives no count, and there the loss shows only as sequence gaps (`docs/status/M2.md`) |
 | R4 | Unknown fields are kept | An information element the decoder does not know, including enterprise elements, passes through as its ID and raw bytes |
-| R5 | Throughput and latency are measured | Generated load at rising rates; records per second and p99 from receipt to output, in a run file |
+| R5 | Throughput and latency are measured | Generated load at rising rates; records per second and p99 from receipt to output, in a run file. M2: `runs/ryzen/2026-11-23-collector*.json`, loopback; latency is also taken from the scheduled send time, so time queued in the socket counts |
 | R6 | Wazuh raises alerts from it | With the pack installed in the Wazuh container, `wazuh-logtest` decodes every event type and the expected rule fires; one end-to-end run shows a detector alert in Wazuh's `alerts.json` |
 | R7 | Detectors are deterministic and explained | The same input gives the same alerts. Each alert carries detector, evidence and threshold. Each detector passes labelled generated scenarios, both attack and benign |
 | R8 | False alerts are measured | Each detector's alert count over a recorded period of normal traffic is reported, per day, before its default threshold is fixed. The traffic itself is not committed |
@@ -86,6 +86,8 @@ UDP ──► receive ──► decode ──► enrich ──► aggregate ─�
 - Aggregation keeps fixed-size windows per internal host and per
   host-to-destination pair. Detectors read windows, not single records.
 - Output writes two event kinds: `flow` (optional, for search) and `alert`.
+- M2 has four stages: receive, decode, encode (JSON lines) and output.
+  Enrich, aggregate and detect come with M4.
 
 ### Crates
 
